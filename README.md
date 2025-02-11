@@ -15,4 +15,4 @@ Que vous soyez un administrateur système ou un utilisateur cherchant à simplif
 ➜ Supprime les accents des noms de dossiers pour éviter des problèmes de compatibilité.  
 
 ### 🖥️ info_pc.ps1  
-➜ Récupère et affiche les informations essentielles du système de votre PC.  
+➜ Récupère et affiche les informations essentielles du système de votre PC avec une interface graphique.  
