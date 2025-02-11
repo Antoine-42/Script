@@ -30,7 +30,7 @@ $domain = (Get-WmiObject Win32_ComputerSystem).Domain  # Récupération du nom d
 if ($domain -eq $env:COMPUTERNAME -or $domain -eq "WORKGROUP") { 
     $domain = "Ce PC n'est pas dans un domaine"  # Remplacement si l'ordinateur est hors domaine
 }
-$ip = (Get-NetIPAddress -AddressFamily IPV4 -InterfaceAlias Wi-Fi).IPAddress# Récupération de l'adresse IP
+while (-not ($ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue).IPAddress -match '^(?!169\.)')) { Start-Sleep 1 }; $ip # Récupération de l'adresse IP
 
 # Ajouter les infos système sous forme de labels
 $y = 60  # Position verticale initiale pour afficher les infos
