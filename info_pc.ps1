@@ -3,7 +3,7 @@ Add-Type -AssemblyName System.Windows.Forms
 
 # Créer la fenêtre
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Text en haut de la page"
+$form.Text = "Texte en haut de la page"
 $form.AutoSize = $true
 $form.StartPosition = "CenterScreen"
 $form.BackColor = [System.Drawing.Color]::White
@@ -15,7 +15,7 @@ $logo.Size = New-Object System.Drawing.Size(180, 45)
 $logo.Location = New-Object System.Drawing.Point(280, 15)
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $webClient = New-Object System.Net.WebClient
+    $webClient = New-Object System.Net.We     bClient
     $stream = $webClient.OpenRead("lien du logo voulu")
     $logo.Image = [System.Drawing.Image]::FromStream($stream)
     $stream.Close()
