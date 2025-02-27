@@ -1,4 +1,4 @@
-#Cacher la fenetre Powershell
+# Cacher la fenêtre noire de PowerShell
 Add-Type -Name WinAPI -Namespace Win32 -MemberDefinition @"
     [DllImport("user32.dll")]
     public static extern int ShowWindow(IntPtr hWnd, int nCmdShow);
@@ -8,23 +8,22 @@ Add-Type -Name WinAPI -Namespace Win32 -MemberDefinition @"
 $consolePtr = [Win32.WinAPI]::GetConsoleWindow()
 
 # Définition des variables
-$scriptQS = "chemin du nouveau dossier à creer "
+$scriptQS = "Chemin dans C:"
 $tvPath = "$scriptQS\TeamViewerQS.exe"
-$downloadURL = "https://customdesignservice.teamviewer.com/download/windows/v15/6h32dug/TeamViewerQS.exe"
+$downloadURL = "Llien de telechargement de TeamViewer"
 
 # Vérifier si TeamViewer QuickSupport est présent
 if (!(Test-Path $tvPath)) {
-    Write-Host "TeamViewer QuickSupport non trouvé. Masquage de la console dans 20 secondes..."
-    Start-Sleep -Seconds 20
+    Write-Host "TeamViewer QuickSupport non trouvé. Téléchargement  dans 5 secondes..."
+    Start-Sleep -Seconds 5
 }
-
 
 # Charger Windows Forms
 Add-Type -AssemblyName System.Windows.Forms
 
 # Créer la fenêtre
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Texte dans la barre du haut"
+$form.Text = "Texte das"
 $form.AutoSize = $true
 $form.StartPosition = "CenterScreen"
 $form.BackColor = [System.Drawing.Color]::White
@@ -37,7 +36,7 @@ $logo.Location = New-Object System.Drawing.Point(280, 15)
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $webClient = New-Object System.Net.WebClient
-    $stream = $webClient.OpenRead("lien internet pour le logo")
+    $stream = $webClient.OpenRead("https://jl-systems.fr/wp-content/uploads/2020/09/Logo.jpg")
     $logo.Image = [System.Drawing.Image]::FromStream($stream)
     $stream.Close()
 } catch {
@@ -60,12 +59,12 @@ if ($domain -eq $env:COMPUTERNAME -or $domain -eq "WORKGROUP") {
     $domain = "Ce PC n'est pas dans un domaine"
 }
 
-# Récupération optimisée de l'adresse IP
+# Récupération de l'adresse IP optimisée
 $ipAddresses = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.IPAddress -notlike "169.254.*" }
-$ip = if ($ipAddresses) { $ipAddresses[0].IPAddress } else { "Adresse IP non trouvée" }
+$ip = if ($ipAddresses.Count -gt 0) { $ipAddresses[0].IPAddress } else { "Adresse IP non trouvée" }
 
 # Afficher les informations système
-$infoList = @("Domaine : $domain", "Utilisateur : $env:USERNAME", "Ordinateur : $env:COMPUTERNAME", "Adresse IP : $ip", "Hotline : Numéro de la hotline")
+$infoList = @("Domaine : $domain", "Utilisateur : $env:USERNAME", "Ordinateur : $env:COMPUTERNAME", "Adresse IP : $ip", "Hotline : 04 82 74 02 05")
 $y = 60
 foreach ($info in $infoList) {
     $label = New-Object System.Windows.Forms.Label
@@ -84,7 +83,7 @@ $linkTicket.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawin
 $linkTicket.Location = New-Object System.Drawing.Point(20, $y)
 $linkTicket.AutoSize = $true
 $linkTicket.LinkColor = [System.Drawing.Color]::Blue
-$linkTicket.add_Click({ Start-Process "Lien pour la création d'un ticket" })
+$linkTicket.add_Click({ Start-Process "Lien pour cree un ticket" })
 $form.Controls.Add($linkTicket)
 $y += 30
 
@@ -100,7 +99,7 @@ $btnClose.Add_Click({ $form.Close() })
 $form.Controls.Add($btnClose)
 
 # Vérifier et créer le dossier JLS si nécessaire
-if (!(Test-Path $scriptQS)) { New-Item -Path "C:\" -Name "JLS" -ItemType "directory" } 
+if (!(Test-Path $scriptQS)) { New-Item -Path "C:\" -Name "JLS" -ItemType "directory" -Force } 
 
 # Télécharger TeamViewerQS.exe si nécessaire
 if (!(Test-Path $tvPath)) {
@@ -117,4 +116,13 @@ if (!(Test-Path $tvPath)) {
     Start-Process $tvPath
 }
 
+# Initialiser et démarrer le timer correctement
+$timer = New-Object System.Diagnostics.Stopwatch
+if ($timer -ne $null) {
+    $timer.Start()
+} else {
+    Write-Host "Erreur : Timer non initialisé."
+}
+
+# Afficher la fenêtre
 $form.ShowDialog()
