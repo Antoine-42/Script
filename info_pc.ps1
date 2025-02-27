@@ -1,9 +1,30 @@
+#Cacher la fenetre Powershell
+Add-Type -Name WinAPI -Namespace Win32 -MemberDefinition @"
+    [DllImport("user32.dll")]
+    public static extern int ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr GetConsoleWindow();
+"@
+$consolePtr = [Win32.WinAPI]::GetConsoleWindow()
+
+# Définition des variables
+$scriptQS = "chemin du nouveau dossier à creer "
+$tvPath = "$scriptQS\TeamViewerQS.exe"
+$downloadURL = "https://customdesignservice.teamviewer.com/download/windows/v15/6h32dug/TeamViewerQS.exe"
+
+# Vérifier si TeamViewer QuickSupport est présent
+if (!(Test-Path $tvPath)) {
+    Write-Host "TeamViewer QuickSupport non trouvé. Masquage de la console dans 20 secondes..."
+    Start-Sleep -Seconds 20
+}
+
+
 # Charger Windows Forms
 Add-Type -AssemblyName System.Windows.Forms
 
 # Créer la fenêtre
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Texte en haut de la page"
+$form.Text = "Texte dans la barre du haut"
 $form.AutoSize = $true
 $form.StartPosition = "CenterScreen"
 $form.BackColor = [System.Drawing.Color]::White
@@ -15,13 +36,12 @@ $logo.Size = New-Object System.Drawing.Size(180, 45)
 $logo.Location = New-Object System.Drawing.Point(280, 15)
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $webClient = New-Object System.Net.We     bClient
-    $stream = $webClient.OpenRead("lien du logo voulu")
+    $webClient = New-Object System.Net.WebClient
+    $stream = $webClient.OpenRead("lien internet pour le logo")
     $logo.Image = [System.Drawing.Image]::FromStream($stream)
     $stream.Close()
 } catch {
     Write-Host "Erreur lors du chargement du logo : $_"
-    # Optionnel : assigner une image locale ou laisser vide
 }
 $form.Controls.Add($logo)
 
@@ -40,22 +60,12 @@ if ($domain -eq $env:COMPUTERNAME -or $domain -eq "WORKGROUP") {
     $domain = "Ce PC n'est pas dans un domaine"
 }
 
-# Récupération optimisée de l'adresse IP (excluant les adresses APIPA)
+# Récupération optimisée de l'adresse IP
 $ipAddresses = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.IPAddress -notlike "169.254.*" }
-if ($ipAddresses) {
-    $ip = $ipAddresses[0].IPAddress
-} else {
-    $ip = "Adresse IP non trouvée"
-}
+$ip = if ($ipAddresses) { $ipAddresses[0].IPAddress } else { "Adresse IP non trouvée" }
 
-# Afficher les informations système sous forme de labels
-$infoList = @(
-    "Domaine : $domain",
-    "Utilisateur : $env:USERNAME",
-    "Ordinateur : $env:COMPUTERNAME",
-    "Adresse IP : $ip",
-    "Hotline : Numéro de téléphone"
-)
+# Afficher les informations système
+$infoList = @("Domaine : $domain", "Utilisateur : $env:USERNAME", "Ordinateur : $env:COMPUTERNAME", "Adresse IP : $ip", "Hotline : Numéro de la hotline")
 $y = 60
 foreach ($info in $infoList) {
     $label = New-Object System.Windows.Forms.Label
@@ -67,26 +77,15 @@ foreach ($info in $infoList) {
     $y += 25
 }
 
-# Ajouter un lien cliquable pour créer un ticket
+# Ajouter un lien pour créer un ticket
 $linkTicket = New-Object System.Windows.Forms.LinkLabel
 $linkTicket.Text = "Création d'un ticket"
 $linkTicket.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
 $linkTicket.Location = New-Object System.Drawing.Point(20, $y)
 $linkTicket.AutoSize = $true
 $linkTicket.LinkColor = [System.Drawing.Color]::Blue
-$linkTicket.add_Click({ Start-Process "lien création d'un ticket" })
+$linkTicket.add_Click({ Start-Process "Lien pour la création d'un ticket" })
 $form.Controls.Add($linkTicket)
-$y += 30
-
-# Ajouter un lien cliquable pour télécharger Teamviewer
-$linkTeamviewer = New-Object System.Windows.Forms.LinkLabel
-$linkTeamviewer.Text = "Télécharger Teamviewer"
-$linkTeamviewer.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
-$linkTeamviewer.Location = New-Object System.Drawing.Point(20, $y)
-$linkTeamviewer.AutoSize = $true
-$linkTeamviewer.LinkColor = [System.Drawing.Color]::Blue
-$linkTeamviewer.add_Click({ Start-Process "lien pour télécharger TeamViewer" })
-$form.Controls.Add($linkTeamviewer)
 $y += 30
 
 # Ajouter un bouton "Fermer"
@@ -96,18 +95,26 @@ $btnClose.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.
 $btnClose.ForeColor = [System.Drawing.Color]::White
 $btnClose.BackColor = [System.Drawing.Color]::Black
 $btnClose.Size = New-Object System.Drawing.Size(200, 40)
-# Centrer le bouton horizontalement par rapport à la fenêtre
 $btnClose.Location = New-Object System.Drawing.Point((($form.ClientSize.Width - $btnClose.Width) / 2), $y)
 $btnClose.Add_Click({ $form.Close() })
 $form.Controls.Add($btnClose)
 
-# Lancer le script info.ps1 en arrière-plan si celui-ci existe
-$scriptPath = "E:\script\info.ps1"
-if (Test-Path $scriptPath) {
-    Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$scriptPath`"" -NoNewWindow -PassThru | Out-Null
+# Vérifier et créer le dossier JLS si nécessaire
+if (!(Test-Path $scriptQS)) { New-Item -Path "C:\" -Name "JLS" -ItemType "directory" } 
+
+# Télécharger TeamViewerQS.exe si nécessaire
+if (!(Test-Path $tvPath)) {
+    Write-Host "TeamViewer QuickSupport absent. Téléchargement en cours..."
+    try {
+        Invoke-WebRequest -Uri $downloadURL -OutFile $tvPath -UseBasicParsing
+        Write-Host "Téléchargement terminé. Lancement..."
+        Start-Process $tvPath
+    } catch {
+        Write-Host "Erreur lors du téléchargement : $_"
+    }
 } else {
-    Write-Host "Script $scriptPath non trouvé."
+    Write-Host "TeamViewer QuickSupport déjà présent. Lancement..."
+    Start-Process $tvPath
 }
 
-# Afficher la fenêtre
 $form.ShowDialog()
